@@ -1,5 +1,4 @@
-import { Avatar } from "@/components/ui/avatar"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table"
 import { MoreHorizontal } from "lucide-react"
 
 const gpuRentals = [
@@ -38,7 +37,7 @@ const gpuRentals = [
 export function GPURentalsTable() {
   return (
     <Table>
-      <TableHeader>
+      <thead>
         <TableRow>
           <TableHead>GPU Model</TableHead>
           <TableHead>Cores</TableHead>
@@ -50,18 +49,11 @@ export function GPURentalsTable() {
           <TableHead>Status</TableHead>
           <TableHead></TableHead>
         </TableRow>
-      </TableHeader>
+      </thead>
       <TableBody>
         {gpuRentals.map((gpu) => (
           <TableRow key={gpu.name}>
-            <TableCell className="font-medium">
-              <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <img src={`/placeholder.svg?height=24&width=24`} alt={gpu.name} />
-                </Avatar>
-                <div>{gpu.name}</div>
-              </div>
-            </TableCell>
+            <TableCell className="font-medium">{gpu.name}</TableCell>
             <TableCell>{gpu.cores}</TableCell>
             <TableCell>{gpu.memory}</TableCell>
             <TableCell>{gpu.performance}</TableCell>
@@ -86,4 +78,3 @@ export function GPURentalsTable() {
     </Table>
   )
 }
-
