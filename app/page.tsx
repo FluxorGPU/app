@@ -9,11 +9,13 @@ import { MarketplaceSection } from "@/components/marketplace-section"
 import { MyGPUsSection } from "@/components/my-gpus-section"
 import { SettingsSection } from "@/components/settings-section"
 import { BarChart3, Globe, Home, LayoutDashboard, LogIn, Settings } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 type Section = "dashboard" | "performance" | "marketplace" | "my-gpus" | "settings"
 
 export default function Page() {
   const [activeSection, setActiveSection] = useState<Section>("dashboard")
+  const router = useRouter()
 
   const renderSection = () => {
     switch (activeSection) {
@@ -93,7 +95,7 @@ export default function Page() {
             <h1 className="text-2xl font-bold">{activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}</h1>
             <div className="text-sm text-muted-foreground">Manage your Fluxor account and preferences</div>
           </div>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => router.push("/settings")}>
             <LogIn className="h-4 w-4" />
             Login
           </Button>
