@@ -1,19 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { useEffect } from "react"
 
-export function SettingsSection() {
+interface SettingsSectionProps {
+  setIsLoggedIn: (value: boolean) => void
+  setUsername: (value: string) => void
+}
+
+export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionProps) {
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [smsNotifications, setSmsNotifications] = useState(false)
   const [walletConnected, setWalletConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState("")
+  const [localUsername, setLocalUsername] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("")
 
   useEffect(() => {
     // Check if Phantom wallet is installed
@@ -25,6 +31,8 @@ export function SettingsSection() {
             const response = await provider.connect({ onlyIfTrusted: true })
             setWalletConnected(true)
             setWalletAddress(response.publicKey.toString())
+            setIsLoggedIn(true)
+            setUsername(response.publicKey.toString().slice(0, 4) + "..." + response.publicKey.toString().slice(-4))
           } catch (err) {
             // User hasn't connected to the app before or has revoked permissions
             setWalletConnected(false)
@@ -34,7 +42,21 @@ export function SettingsSection() {
     }
 
     checkPhantomWallet()
-  }, [])
+
+    // Check if username is stored in localStorage
+    const storedUsername = localStorage.getItem("username")
+    if (storedUsername) {
+      setLocalUsername(storedUsername)
+      setIsLoggedIn(true)
+      setUsername(storedUsername)
+    }
+
+    // Check if phone number is stored in localStorage
+    const storedPhoneNumber = localStorage.getItem("phoneNumber")
+    if (storedPhoneNumber) {
+      setPhoneNumber(storedPhoneNumber)
+    }
+  }, [setIsLoggedIn, setUsername])
 
   const connectWallet = async () => {
     if ("solana" in window) {
@@ -44,6 +66,8 @@ export function SettingsSection() {
           const response = await provider.connect()
           setWalletConnected(true)
           setWalletAddress(response.publicKey.toString())
+          setIsLoggedIn(true)
+          setUsername(response.publicKey.toString().slice(0, 4) + "..." + response.publicKey.toString().slice(-4))
         } catch (err) {
           // Handle errors here
           console.error("Failed to connect wallet:", err)
@@ -54,6 +78,19 @@ export function SettingsSection() {
     }
   }
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (localUsername) {
+      localStorage.setItem("username", localUsername)
+      setIsLoggedIn(true)
+      setUsername(localUsername)
+    }
+    if (phoneNumber) {
+      localStorage.setItem("phoneNumber", phoneNumber)
+    }
+    // Add any other form submission logic here
+  }
+
   return (
     <div className="space-y-6 pt-6">
       <Tabs defaultValue="account" className="w-full">
@@ -61,7 +98,6 @@ export function SettingsSection() {
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
-          <TabsTrigger value="wallet">Wallet</TabsTrigger>
         </TabsList>
 
         <TabsContent value="account">
@@ -70,27 +106,42 @@ export function SettingsSection() {
               <CardTitle>Account Information</CardTitle>
               <CardDescription>Update your account details here.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="John Doe" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john@example.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input id="username" placeholder="johndoe" />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch id="auto-renew" />
-                <Label htmlFor="auto-renew">Auto-renew Rentals</Label>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">Save Changes</Button>
-            </CardFooter>
+            <form onSubmit={handleSubmit}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="Enter your username"
+                    value={localUsername}
+                    onChange={(e) => setLocalUsername(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="john@example.com" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch id="auto-renew" />
+                  <Label htmlFor="auto-renew">Auto-renew Rentals</Label>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit" className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+                  Save All Changes
+                </Button>
+              </CardFooter>
+            </form>
           </Card>
         </TabsContent>
 
@@ -120,7 +171,7 @@ export function SettingsSection() {
           <Card>
             <CardHeader>
               <CardTitle>Billing Information</CardTitle>
-              <CardDescription>Manage your billing details and payment methods.</CardDescription>
+              <CardDescription>Manage your billing details, payment methods, and wallet connection.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -141,32 +192,22 @@ export function SettingsSection() {
                 <Label htmlFor="billing-address">Billing Address</Label>
                 <Input id="billing-address" placeholder="123 Main St, City, Country" />
               </div>
+              <div className="space-y-2">
+                <Label>Wallet Connection</Label>
+                {walletConnected ? (
+                  <div>
+                    <p>Wallet connected</p>
+                    <p className="text-sm text-muted-foreground break-all">{walletAddress}</p>
+                  </div>
+                ) : (
+                  <p>No wallet connected</p>
+                )}
+              </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-between">
               <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
                 Update Billing Info
               </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="wallet">
-          <Card>
-            <CardHeader>
-              <CardTitle>Wallet Connection</CardTitle>
-              <CardDescription>Connect your Phantom wallet to manage your GPU rentals.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {walletConnected ? (
-                <div>
-                  <p>Wallet connected</p>
-                  <p className="text-sm text-muted-foreground break-all">{walletAddress}</p>
-                </div>
-              ) : (
-                <p>No wallet connected</p>
-              )}
-            </CardContent>
-            <CardFooter>
               <Button onClick={connectWallet} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
                 {walletConnected ? "Disconnect Wallet" : "Connect Phantom Wallet"}
               </Button>
