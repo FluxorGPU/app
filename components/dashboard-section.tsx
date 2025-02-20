@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { MetricsCard } from "@/components/metrics-card"
-import { StatsChart } from "@/components/stats-chart"
 import { GPURentalsTable } from "@/components/gpu-rentals-table"
 
 export function DashboardSection() {
@@ -10,18 +9,18 @@ export function DashboardSection() {
       <div className="grid gap-4 md:grid-cols-2">
         <MetricsCard
           title="Total Computing Power"
-          value="98.62"
+          value="0"
           unit="TFLOPS"
-          change={{ value: "+2.5 TFLOPS", percentage: "+2.6%", isPositive: true }}
+          change={{ value: "N/A", percentage: "N/A", isPositive: true }}
         />
         <MetricsCard
           title="Active GPUs"
-          value="2"
-          unit="/ 3"
-          change={{ value: "-1", percentage: "-33.3%", isPositive: false }}
+          value="0"
+          unit="/ 0"
+          change={{ value: "N/A", percentage: "N/A", isPositive: true }}
         />
       </div>
-      <Card className="mt-6 p-6">
+      <Card className="mt-6 p-6 bg-background/50 backdrop-blur supports-[backdrop-filter]:bg-background/50">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Performance History</h2>
           <div className="flex gap-2">
@@ -39,11 +38,15 @@ export function DashboardSection() {
             </Button>
           </div>
         </div>
-        <StatsChart />
+        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+          No performance data available yet.
+        </div>
       </Card>
       <div className="mt-6">
         <h2 className="text-lg font-semibold mb-4">Your GPU Rentals</h2>
-        <GPURentalsTable />
+        <div className="rounded-lg border bg-background/50 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+          <GPURentalsTable />
+        </div>
       </div>
     </>
   )
