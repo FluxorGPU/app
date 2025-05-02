@@ -4,65 +4,65 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --background: 220 20% 97%;
+    --foreground: 220 20% 10%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card: 220 20% 100%;
+    --card-foreground: 220 20% 10%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
+    --popover: 220 20% 100%;
+    --popover-foreground: 220 20% 10%;
 
-    --primary: 20.5 90.2% 48.2%;
-    --primary-foreground: 60 9.1% 97.8%;
+    --primary: 45 100% 50%;
+    --primary-foreground: 220 20% 10%;
 
-    --secondary: 44 89% 58%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 45 100% 60%;
+    --secondary-foreground: 220 20% 10%;
 
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
+    --muted: 220 20% 92%;
+    --muted-foreground: 220 20% 40%;
 
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 220 20% 92%;
+    --accent-foreground: 220 20% 10%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 220 20% 98%;
 
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 20.5 90.2% 48.2%;
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 45 100% 50%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 220 20% 2%;
+    --foreground: 220 20% 98%;
 
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 20% 5%;
+    --card-foreground: 220 20% 98%;
 
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 20% 5%;
+    --popover-foreground: 220 20% 98%;
 
-    --primary: 20.5 90.2% 48.2%;
-    --primary-foreground: 60 9.1% 97.8%;
+    --primary: 45 100% 50%;
+    --primary-foreground: 220 20% 10%;
 
-    --secondary: 44 89% 58%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 45 100% 60%;
+    --secondary-foreground: 220 20% 10%;
 
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted: 220 20% 12%;
+    --muted-foreground: 220 20% 70%;
 
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 220 20% 12%;
+    --accent-foreground: 220 20% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 220 20% 98%;
 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 20.5 90.2% 48.2%;
+    --border: 220 20% 15%;
+    --input: 220 20% 15%;
+    --ring: 45 100% 50%;
   }
 }
 
@@ -73,5 +73,79 @@
   body {
     @apply bg-background text-foreground;
   }
+  button,
+  [role="button"] {
+    @apply cursor-pointer;
+  }
+  input,
+  textarea,
+  select {
+    @apply cursor-text;
+  }
 }
 
+@layer components {
+  .tech-card {
+    @apply relative overflow-hidden bg-gradient-to-br from-card to-card/80 backdrop-blur-sm border border-border/50;
+  }
+
+  .tech-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.1;
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, rgba(255, 204, 0, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 204, 0, 0.1) 1px, transparent 1px);
+  }
+
+  .tech-glow {
+    position: relative;
+  }
+
+  .tech-glow::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 500ms;
+    background: linear-gradient(
+      to right,
+      hsla(var(--secondary) / 0.5),
+      hsla(var(--primary) / 0.5),
+      hsla(var(--secondary) / 0.5)
+    );
+    filter: blur(4px);
+  }
+
+  .tech-glow:hover::after {
+    opacity: 1;
+  }
+
+  .tech-grid-bg {
+    position: relative;
+  }
+
+  .tech-grid-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-size: 60px 60px;
+    background-image: linear-gradient(to right, rgba(255, 204, 0, 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 204, 0, 0.1) 1px, transparent 1px);
+  }
+
+  /* Custom button styles to maintain yellow theme on hover */
+  .bg-yellow-400.hover\:bg-yellow-500:hover {
+    background-color: #ffab00 !important;
+    color: black !important;
+  }
+
+  /* Ensure login button maintains yellow theme */
+  button[variant="outline"].tech-glow:hover {
+    background-color: rgba(255, 204, 0, 0.1) !important;
+    border-color: rgba(255, 204, 0, 0.3) !important;
+  }
+}
