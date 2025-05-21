@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { User, Bell, CreditCard, FileImage } from "lucide-react"
+import { User, Bell, CreditCard, FileImage, LogIn, LogOut } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
 import { BrandingManager } from "@/components/branding-manager"
 
@@ -96,6 +96,29 @@ export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionP
     }
   }
 
+  const disconnectWallet = async () => {
+    if ("solana" in window) {
+      const provider = window.solana
+      if (provider.isPhantom && provider.isConnected) {
+        try {
+          await provider.disconnect()
+        } catch (err) {
+          console.error("Error disconnecting wallet:", err)
+        }
+      }
+    }
+
+    setWalletConnected(false)
+    setWalletAddress("")
+
+    // If the user was logged in only via wallet, log them out
+    const storedUsername = localStorage.getItem("username")
+    if (!storedUsername) {
+      setIsLoggedIn(false)
+      setUsername("")
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (localUsername) {
@@ -144,58 +167,84 @@ export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionP
     setActiveTab(tab)
   }
 
+  // Format wallet address to show only first 6 and last 4 characters
+  const formatWalletAddress = (address: string) => {
+    if (!address || address.length <= 10) return address
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
+  }
+
+  useEffect(() => {
+    // Add a small delay to ensure the DOM is fully rendered
+    const timer = setTimeout(() => {
+      const billingButton = document.getElementById("billing-tab-button")
+      if (billingButton) {
+        // Force the button to be clickable
+        billingButton.style.pointerEvents = "auto"
+        billingButton.style.position = "relative"
+        billingButton.style.zIndex = "50"
+      }
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className="space-y-6 pt-6">
       {/* Completely redesigned tab navigation to ensure it's clickable */}
-      <div className="grid grid-cols-4 gap-2 mb-6">
-        <Button
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
           onClick={() => handleTabChange("account")}
-          className={`py-6 h-auto flex items-center justify-center gap-2 text-sm font-medium transition-colors cursor-pointer !important ${
+          className={`px-6 py-4 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
             activeTab === "account"
               ? "bg-yellow-400/20 text-yellow-500 border-2 border-yellow-500"
               : "bg-background hover:bg-yellow-400/10 text-muted-foreground"
           }`}
+          style={{ cursor: "pointer", zIndex: 10 }}
           type="button"
         >
           <User className="h-4 w-4" />
-          Account
-        </Button>
-        <Button
+          <span>Account</span>
+        </button>
+        <button
           onClick={() => handleTabChange("notifications")}
-          className={`py-6 h-auto flex items-center justify-center gap-2 text-sm font-medium transition-colors cursor-pointer !important ${
+          className={`px-6 py-4 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
             activeTab === "notifications"
               ? "bg-yellow-400/20 text-yellow-500 border-2 border-yellow-500"
               : "bg-background hover:bg-yellow-400/10 text-muted-foreground"
           }`}
+          style={{ cursor: "pointer", zIndex: 10 }}
           type="button"
         >
           <Bell className="h-4 w-4" />
-          Notifications
-        </Button>
-        <Button
+          <span>Notifications</span>
+        </button>
+        <button
           onClick={() => handleTabChange("billing")}
-          className={`py-6 h-auto flex items-center justify-center gap-2 text-sm font-medium transition-colors cursor-pointer !important ${
+          className={`px-6 py-4 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
             activeTab === "billing"
               ? "bg-yellow-400/20 text-yellow-500 border-2 border-yellow-500"
               : "bg-background hover:bg-yellow-400/10 text-muted-foreground"
           }`}
+          style={{ cursor: "pointer", zIndex: 10 }}
           type="button"
+          id="billing-tab-button"
         >
           <CreditCard className="h-4 w-4" />
-          Billing
-        </Button>
-        <Button
+          <span>Billing</span>
+        </button>
+        <button
           onClick={() => handleTabChange("branding")}
-          className={`py-6 h-auto flex items-center justify-center gap-2 text-sm font-medium transition-colors cursor-pointer !important ${
+          className={`px-6 py-4 rounded-md flex items-center justify-center gap-2 text-sm font-medium transition-colors ${
             activeTab === "branding"
               ? "bg-yellow-400/20 text-yellow-500 border-2 border-yellow-500"
               : "bg-background hover:bg-yellow-400/10 text-muted-foreground"
           }`}
+          style={{ cursor: "pointer", zIndex: 10 }}
           type="button"
         >
           <FileImage className="h-4 w-4" />
-          Branding
-        </Button>
+          <span>Branding</span>
+        </button>
       </div>
 
       {activeTab === "account" && (
@@ -267,10 +316,7 @@ export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionP
                 />
               </div>
               <div className="flex items-center space-x-2">
-                <Switch
-                  id="auto-renew"
-                  className="data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black"
-                />
+                <Switch id="auto-renew" />
                 <Label htmlFor="auto-renew" className="cursor-pointer">
                   Auto-renew Rentals
                 </Label>
@@ -299,23 +345,13 @@ export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionP
               <Label htmlFor="email-notifications" className="cursor-pointer">
                 Email Notifications
               </Label>
-              <Switch
-                id="email-notifications"
-                checked={emailNotifications}
-                onCheckedChange={setEmailNotifications}
-                className="data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black cursor-pointer"
-              />
+              <Switch id="email-notifications" checked={emailNotifications} onCheckedChange={setEmailNotifications} />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="sms-notifications" className="cursor-pointer">
                 SMS Notifications
               </Label>
-              <Switch
-                id="sms-notifications"
-                checked={smsNotifications}
-                onCheckedChange={setSmsNotifications}
-                className="data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black cursor-pointer"
-              />
+              <Switch id="sms-notifications" checked={smsNotifications} onCheckedChange={setSmsNotifications} />
             </div>
             <div className="space-y-2 pt-4 border-t border-yellow-400/10">
               <h3 className="text-sm font-medium text-yellow-500">Notification Types</h3>
@@ -324,41 +360,25 @@ export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionP
                   <Label htmlFor="gpu-alerts" className="text-sm cursor-pointer">
                     GPU Status Alerts
                   </Label>
-                  <Switch
-                    id="gpu-alerts"
-                    defaultChecked={true}
-                    className="data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black cursor-pointer"
-                  />
+                  <Switch id="gpu-alerts" defaultChecked={true} />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="billing-alerts" className="text-sm cursor-pointer">
                     Billing Notifications
                   </Label>
-                  <Switch
-                    id="billing-alerts"
-                    defaultChecked={true}
-                    className="data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black cursor-pointer"
-                  />
+                  <Switch id="billing-alerts" defaultChecked={true} />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="marketplace-alerts" className="text-sm cursor-pointer">
                     Marketplace Updates
                   </Label>
-                  <Switch
-                    id="marketplace-alerts"
-                    defaultChecked={false}
-                    className="data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black cursor-pointer"
-                  />
+                  <Switch id="marketplace-alerts" defaultChecked={false} />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="security-alerts" className="text-sm cursor-pointer">
                     Security Alerts
                   </Label>
-                  <Switch
-                    id="security-alerts"
-                    defaultChecked={true}
-                    className="data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black cursor-pointer"
-                  />
+                  <Switch id="security-alerts" defaultChecked={true} />
                 </div>
               </div>
             </div>
@@ -380,39 +400,63 @@ export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionP
             </CardTitle>
             <CardDescription>Manage your billing details, payment methods, and wallet connection.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="card-number">Card Number</Label>
-              <Input id="card-number" placeholder="**** **** **** 1234" className="tech-card border-yellow-400/20" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="expiry">Expiry Date</Label>
-                <Input id="expiry" placeholder="MM/YY" className="tech-card border-yellow-400/20" />
+          <CardContent className="space-y-4 relative z-10">
+            <div className="p-4 rounded-md bg-yellow-400/10 border border-yellow-400/20">
+              <div className="flex items-center gap-2 mb-2">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-yellow-500"
+                >
+                  <path
+                    d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="font-medium text-yellow-500">Current Subscription: Fluxor Trial</span>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cvc">CVC</Label>
-                <Input id="cvc" placeholder="123" className="tech-card border-yellow-400/20" />
+              <div className="flex justify-between items-center mb-2">
+                <div>
+                  <p className="text-sm">Monthly subscription</p>
+                  <p className="text-xs text-muted-foreground">Purchase a subscription for more credits</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium">$0.00/month</p>
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name-on-card">Name on Card</Label>
-              <Input id="name-on-card" placeholder="John Doe" className="tech-card border-yellow-400/20" />
+              <div className="mt-4 pt-4 border-t border-yellow-400/10">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium">Computational Credits</p>
+                  <p className="text-sm font-medium">5 / 5 remaining</p>
+                </div>
+                <div className="w-full h-2 bg-yellow-400/20 rounded-full mt-2">
+                  <div className="h-full bg-yellow-500 rounded-full" style={{ width: "100%" }}></div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Credits reset on Never</p>
+              </div>
             </div>
 
-            <div className="pt-4 border-t border-yellow-400/10">
+            <div id="wallet-connection-section" className="pt-4 border-t border-yellow-400/10 relative z-10">
               <h3 className="text-sm font-medium text-yellow-500 mb-4">Wallet Connection</h3>
               {walletConnected ? (
-                <div className="p-4 rounded-md bg-yellow-400/10 border border-yellow-400/20">
+                <div className="p-4 rounded-md bg-yellow-400/10 border border-yellow-400/20 relative z-10">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">Wallet Connected</p>
-                      <p className="text-sm text-muted-foreground mt-1 font-mono">{walletAddress}</p>
+                      <p className="text-sm text-muted-foreground mt-1 font-mono">
+                        {formatWalletAddress(walletAddress)}
+                      </p>
                     </div>
                     <Button
                       variant="outline"
-                      className="border-yellow-400/20 hover:bg-yellow-400/10 text-yellow-500 cursor-pointer"
+                      className="border-yellow-400/20 hover:bg-yellow-400/10 text-yellow-500 cursor-pointer relative z-20"
+                      onClick={disconnectWallet}
                     >
+                      <LogOut className="h-4 w-4 mr-2" />
                       Disconnect
                     </Button>
                   </div>
@@ -420,8 +464,9 @@ export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionP
               ) : (
                 <Button
                   onClick={connectWallet}
-                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black tech-glow cursor-pointer"
+                  className="w-full bg-yellow-400 hover:bg-yellow-500 text-black tech-glow cursor-pointer py-3 text-base"
                 >
+                  <LogIn className="h-5 w-5 mr-2" />
                   Connect Phantom Wallet
                 </Button>
               )}
@@ -429,17 +474,32 @@ export function SettingsSection({ setIsLoggedIn, setUsername }: SettingsSectionP
 
             <div className="pt-4 border-t border-yellow-400/10">
               <h3 className="text-sm font-medium text-yellow-500 mb-4">Payment History</h3>
-              <div className="text-center py-6 border border-dashed border-yellow-400/20 rounded-md bg-yellow-400/5">
-                <p className="text-muted-foreground">No payment history available</p>
+              <div className="space-y-3">
+                <div className="p-3 rounded-md border border-yellow-400/20 bg-yellow-400/5 flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">Fluxor Trial</p>
+                    <p className="text-xs text-muted-foreground">May 21, 2025</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">$0.00</p>
+                    <p className="text-xs text-green-500">Completed</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full mt-2 border-yellow-400/20 hover:bg-yellow-400/10 text-yellow-500 cursor-pointer"
+                >
+                  View All Transactions
+                </Button>
               </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button variant="outline" className="border-yellow-400/20 hover:bg-yellow-400/10 cursor-pointer">
-              Cancel
+              Cancel Subscription
             </Button>
-            <Button className="bg-yellow-400 hover:bg-yellow-500 text-black tech-glow cursor-pointer">
-              Save Payment Details
+            <Button className="bg-yellow-400 hover:bg-yellow-500 text-black tech-glow cursor-pointer relative z-10">
+              Manage Subscription
             </Button>
           </CardFooter>
         </Card>
