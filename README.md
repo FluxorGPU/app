@@ -43,9 +43,7 @@ yarn dev
 Open http://localhost:3000 in your browser to see the application.
 
 🛠️ Project Structure
-plaintext
-Copy
-Edit
+```
 ├── app/                 # Application pages and routing
 ├── components/          # Reusable UI components
 ├── hooks/               # Custom React hooks
@@ -55,6 +53,7 @@ Edit
 ├── tailwind.config.ts   # Tailwind CSS configuration
 ├── tsconfig.json        # TypeScript configuration
 ├── package.json         # Project metadata and scripts
+```
 🌐 Live Demo
 Check out the live application at https://fluxor.app.
 
